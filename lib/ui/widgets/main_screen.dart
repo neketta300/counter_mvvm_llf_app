@@ -1,62 +1,25 @@
-// ignore_for_file: public_member_api_docs, sort_constructors_first
-import 'dart:math';
-
 import 'package:flutter/material.dart';
+import 'package:mvvm_counter_llf/domain/services/user_service.dart';
 import 'package:provider/provider.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
-class User {
-  final int age;
-
-  User({required this.age});
-
-  User copyWith({int? age}) {
-    return User(age: age ?? this.age);
-  }
-}
-
-class UserSevrive {
-  var _user = User(age: 0);
-  User get user => _user;
-
-  Future<void> loadValue() async {
-    final sharedPreferences = await SharedPreferences.getInstance();
-    final age = sharedPreferences.getInt('age') ?? 0;
-    _user = User(age: age);
-  }
-
-  void incrementAge() async {
-    _user = _user.copyWith(age: _user.age + 1);
-  }
-
-  void saveValue() async {
-    final sharedPreferences = await SharedPreferences.getInstance();
-    sharedPreferences.setInt('age', _user.age);
-  }
-
-  void decrementAge() async {
-    _user = _user.copyWith(age: max(_user.age - 1, 0));
-  }
-}
-
-class ViewModelState {
+class _ViewModelState {
   final String ageTitle;
 
-  ViewModelState({required this.ageTitle});
+  _ViewModelState({required this.ageTitle});
 }
 
-class ViewModel extends ChangeNotifier {
+class _ViewModel extends ChangeNotifier {
   final _userService = UserSevrive();
 
-  var _state = ViewModelState(ageTitle: '');
-  ViewModelState get state => _state;
+  var _state = _ViewModelState(ageTitle: '');
+  _ViewModelState get state => _state;
 
   void loadValue() async {
-    await _userService.loadValue();
+    await _userService.initialize();
     _updateState();
   }
 
-  ViewModel() {
+  _ViewModel() {
     loadValue();
   }
 
@@ -71,14 +34,21 @@ class ViewModel extends ChangeNotifier {
   }
 
   void _updateState() {
-    final user = _userService._user;
-    _state = ViewModelState(ageTitle: user.age.toString());
+    final user = _userService.user;
+    _state = _ViewModelState(ageTitle: user.age.toString());
     notifyListeners();
   }
 }
 
 class MainScreen extends StatelessWidget {
   const MainScreen({super.key});
+
+  static Widget create() {
+    return ChangeNotifierProvider(
+      create: (BuildContext context) => _ViewModel(),
+      child: const MainScreen(),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -104,7 +74,7 @@ class _AgeTitle extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final title = context.select((ViewModel vm) => vm.state.ageTitle);
+    final title = context.select((_ViewModel vm) => vm.state.ageTitle);
     return Text(title);
   }
 }
@@ -114,7 +84,7 @@ class _AgeIncrementButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final viewModel = context.read<ViewModel>();
+    final viewModel = context.read<_ViewModel>();
     return ElevatedButton(
       onPressed: viewModel.onIncrementButtonPressed,
       child: const Text('+'),
@@ -127,7 +97,7 @@ class _AgeDecrementButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final viewModel = context.read<ViewModel>();
+    final viewModel = context.read<_ViewModel>();
     return ElevatedButton(
       onPressed: viewModel.onDecrementButtonPressed,
       child: const Text('-'),
