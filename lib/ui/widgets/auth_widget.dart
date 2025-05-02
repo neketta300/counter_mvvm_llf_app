@@ -1,4 +1,3 @@
-// ignore_for_file: public_member_api_docs, sort_constructors_first
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -61,7 +60,7 @@ class _ViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> onAuthButtonPressed() async {
+  Future<void> onAuthButtonPressed(BuildContext context) async {
     final login = _state.login;
     final password = _state.password;
     if (login.isEmpty || password.isEmpty) return;
@@ -72,6 +71,9 @@ class _ViewModel extends ChangeNotifier {
       await _authService.login(login, password);
       _state = _state.copyWith(authErrorTitle: '', isAuthInProcess: false);
       notifyListeners();
+      Navigator.of(
+        context,
+      ).pushNamedAndRemoveUntil('mainScreen', (route) => false);
     } on AuthApiProviderIncorectLoginDataError {
       _state = _state.copyWith(
         authErrorTitle: 'Неправильный логин или пароль',
@@ -182,6 +184,9 @@ class AuthButtonWidget extends StatelessWidget {
         authButtonState == _ViewModelAuthButtonState.authProcces
             ? const CircularProgressIndicator()
             : const Text('Авторизоваться');
-    return ElevatedButton(onPressed: onPressed, child: child);
+    return ElevatedButton(
+      onPressed: () => onPressed?.call(context),
+      child: child,
+    );
   }
 }

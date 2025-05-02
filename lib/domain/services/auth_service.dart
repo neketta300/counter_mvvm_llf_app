@@ -6,7 +6,8 @@ class AuthService {
   final _authApiaProvider = AuthApiaProvider();
 
   Future<bool> checkAuth() async {
-    final apiKey = _sessionDataProvider.apiKey();
+    final apiKey = await _sessionDataProvider.apiKey();
+    print('apiKey: $apiKey');
     return apiKey != null;
   }
 
