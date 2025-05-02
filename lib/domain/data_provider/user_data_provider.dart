@@ -1,19 +1,20 @@
 import 'dart:async';
 
-import 'package:flutter/material.dart';
 import 'package:mvvm_counter_llf/domain/entity/user.dart';
 
-class UserDataProvider extends ChangeNotifier {
+class UserDataProvider {
   Timer? _timer;
   var _user = User(age: 0);
+  final _controller = StreamController<User>();
 
+  Stream<User> get userStream => _controller.stream.asBroadcastStream();
   User get user => _user;
 
   void openConect() {
     if (_timer != null) return;
     _timer = Timer.periodic(Duration(seconds: 1), (_) {
       _user = User(age: _user.age + 1);
-      notifyListeners();
+      _controller.add(_user);
     });
   }
 
